@@ -203,7 +203,7 @@
     function asFraction(number) {
       const fraction = Fraction.fromFloat(number);
       if (fraction.numerator) {
-        return `<strong>${fraction.whole}<span style="font-variant-numeric: diagonal-fractions;">${fraction.numerator}/${fraction.denominator}</span></strong>"`
+        return `<strong>${fraction.whole}<span style="font-variant-numeric: diagonal-fractions;">${fraction.numerator}/${fraction.denominator}</span>"</strong> (${number.toFixed(2)})`
       } else {
         return `<strong>${fraction.whole}</strong>"`
       }
