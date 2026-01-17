@@ -159,12 +159,15 @@
             <div class="result-value" id="bottomPanelResult"></div>
         </div>
     </div>
-    
+
     <p class="note">All dimensions are in inches.</p>
 </div>
 
 <script>
     function calculateDimensions() {
+        // (1.65354 inches represents approx 42mm for slide clearance)
+        const SIDE_OFFSET = 1.65354;
+
         // 1. Get Inputs
         const width = parseFloat(document.getElementById('openingWidth').value);
         const height = parseFloat(document.getElementById('drawerHeight').value);
@@ -181,27 +184,23 @@
         const sideLength = slide;
         const sideHeight = height;
 
-        // Front/Back: Length = Opening Width - 1.65354, Height = Input Height
-        // (1.65354 inches represents approx 42mm for slide clearance)
-        const fbLength = width - 1.65354;
+        // Front/Back
+        const fbLength = width - SIDE_OFFSET;
         const fbHeight = height;
 
-        // Bottom: Length = Slide Length - 0.5, Width = Opening Width - 1.15354
+        // Bottom
         const bottomLength = slide - 0.5;
-        const bottomWidth = width - 1.15354;
+        const bottomWidth = width - SIDE_OFFSET + 0.5;
 
         // 3. Update DOM
-        // We use .toFixed(4) to maintain precision as requested, 
-        // but remove trailing zeros if possible using parseFloat() trick for cleaner display
-        
-        document.getElementById('sidePanelResult').innerHTML = 
+        document.getElementById('sidePanelResult').innerHTML =
             `Length: <strong>${sideLength}</strong>" <br> Height: <strong>${sideHeight}</strong>"`;
 
-        document.getElementById('frontBackResult').innerHTML = 
-            `Length: <strong>${parseFloat(fbLength.toFixed(4))}</strong>" <br> Height: <strong>${fbHeight}</strong>"`;
+        document.getElementById('frontBackResult').innerHTML =
+            `Length: <strong>${fbLength}</strong>" <br> Height: <strong>${fbHeight}</strong>"`;
 
-        document.getElementById('bottomPanelResult').innerHTML = 
-            `Length: <strong>${parseFloat(bottomLength.toFixed(4))}</strong>" <br> Width: <strong>${parseFloat(bottomWidth.toFixed(4))}</strong>"`;
+        document.getElementById('bottomPanelResult').innerHTML =
+            `Length: <strong>${bottomLength}</strong>" <br> Width: <strong>${bottomWidth}</strong>"`;
 
         // Show the results area
         document.getElementById('resultsArea').style.display = 'block';
