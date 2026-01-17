@@ -165,7 +165,7 @@
 
 <script>
     class Fraction {
-      constructor(whole, denominator, numerator) {
+      constructor(whole, numerator, denominator) {
         this.whole = whole;
         this.denominator = denominator;
         this.numerator = numerator;
@@ -190,6 +190,14 @@
       }
     }
 
+    function asFraction(number) {
+      const fraction = Fraction.fromFloat(number);
+      if (fraction.numerator) {
+        return `<strong>${fraction.whole}<span style="font-variant-numeric: diagonal-fractions;">${fraction.numerator}/${fraction.denominator}</span></strong>"`
+      } else {
+        return `<strong>${fraction.whole}</strong>"`
+      }
+    }
     function calculateDimensions() {
         // (1.65354 inches represents approx 42mm for slide clearance)
         const SIDE_OFFSET = 1.65354;
@@ -218,17 +226,17 @@
         const bottomLength = slide - 0.5;
         const bottomWidth = width - SIDE_OFFSET + 0.5;
 
-        console.log(Fraction.fromFloat(bottomWidth));
 
         // 3. Update DOM
         document.getElementById('sidePanelResult').innerHTML =
-            `Length: <strong>${sideLength}</strong>" <br> Height: <strong>${sideHeight}</strong>"`;
+            `Length: ${asFraction(sideLength)} <br> Height: ${asFraction(sideHeight)}`;
 
         document.getElementById('frontBackResult').innerHTML =
-            `Length: <strong>${fbLength}</strong>" <br> Height: <strong>${fbHeight}</strong>"`;
+            `Length: ${asFraction(fbLength)} <br> Height: ${asFraction(fbHeight)}`;
 
         document.getElementById('bottomPanelResult').innerHTML =
-            `Length: <strong>${bottomLength}</strong>" <br> Width: <strong>${bottomWidth}</strong>"`;
+            `Length: ${asFraction(bottomLength)} <br> Width: ${asFraction(bottomWidth)}`;
+
 
         // Show the results area
         document.getElementById('resultsArea').style.display = 'block';
