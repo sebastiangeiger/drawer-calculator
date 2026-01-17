@@ -164,6 +164,32 @@
 </div>
 
 <script>
+    class Fraction {
+      constructor(whole, denominator, numerator) {
+        this.whole = whole;
+        this.denominator = denominator;
+        this.numerator = numerator;
+      }
+
+      static fromFloat(number) {
+        const gcd = (a, b) => {
+          // Base case: if b is 0, we found the divisor
+          if (!b) return a;
+
+          // Recursive step: call with b and the remainder of a / b
+          return gcd(b, a % b);
+        };
+
+        const whole = Math.trunc(number);
+        const remainder = number - whole;
+        const rawNumerator = Math.round(remainder * 16);
+        const divisor = gcd(rawNumerator, 16);
+        const numerator = rawNumerator / divisor;
+        const denominator = 16 / divisor;
+        return new Fraction(whole, numerator, denominator);
+      }
+    }
+
     function calculateDimensions() {
         // (1.65354 inches represents approx 42mm for slide clearance)
         const SIDE_OFFSET = 1.65354;
@@ -191,6 +217,8 @@
         // Bottom
         const bottomLength = slide - 0.5;
         const bottomWidth = width - SIDE_OFFSET + 0.5;
+
+        console.log(Fraction.fromFloat(bottomWidth));
 
         // 3. Update DOM
         document.getElementById('sidePanelResult').innerHTML =
