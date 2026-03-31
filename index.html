@@ -98,6 +98,13 @@
             margin-bottom: 1rem;
             border-radius: 4px;
         }
+        .result-item.plain {
+            background: transparent;
+            border-left: none;
+            padding: 0;
+            margin-bottom: 0;
+            border-radius: 0;
+        }
 
         .result-title {
             font-weight: 700;
@@ -122,6 +129,44 @@
         .instructions {
           margin: 2rem;
         }
+        .diagram {
+            margin: 0 0 1.5rem;
+        }
+        .diagram-title {
+            margin: 0 0 0.5rem;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #4b5563;
+            text-transform: uppercase;
+        }
+        .diagram img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: #fff;
+        }
+        .step-diagram {
+            margin-bottom: 1rem;
+        }
+        .step-diagram img {
+            display: block;
+            width: 100%;
+            height: auto;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            background: #fff;
+        }
+        .step-title {
+            margin: 0 0 0.75rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-color);
+        }
+        .step-title.step-two {
+            margin-top: 1.5rem;
+        }
     </style>
 </head>
 <body>
@@ -129,7 +174,13 @@
 <div class="container">
     <h1>Drawer Dimension Calculator</h1>
 
-    <img src="diagram1.png" width=500/>
+    <div class="diagram">
+        <p class="diagram-title">Diagram</p>
+        <img
+            src="diagram1.png"
+            alt="Drawer construction diagram"
+        />
+    </div>
 
     <div class="instructions">
       This calculator assumes you're using Blum undermount drawer slides and you're constructing the box out of 1/2" material.
@@ -151,9 +202,16 @@
         <input type="number" id="slideLength" placeholder="e.g. 20" step="0.001">
     </div>
 
+    <div class="input-group">
+        <label for="bottomThickness">4. Bottom Material Thickness (inches)</label>
+        <input type="number" id="bottomThickness" placeholder="e.g. 0.25 or 0.5" step="0.001" value="0.25">
+    </div>
+
     <button onclick="calculateDimensions()">Calculate Cut List</button>
 
     <div class="results" id="resultsArea">
+        <h2 class="step-title">Step 1: Cut the Pieces</h2>
+
         <div class="result-item">
             <span class="result-title">Side Panels (Quantity: 2)</span>
             <div class="result-value" id="sidePanelResult"></div>
@@ -168,12 +226,56 @@
             <span class="result-title">Bottom Panel (Quantity: 1)</span>
             <div class="result-value" id="bottomPanelResult"></div>
         </div>
+
+        <h2 class="step-title step-two">Step 2: Cut the Grooves</h2>
+        <div class="step-diagram">
+            <img
+                src="diagram2.png"
+                alt="Bottom grooves reference diagram"
+            />
+        </div>
+
+        <div class="result-item plain">
+            <span class="result-title">Groove / Dado Setup</span>
+            <div class="result-value" id="grooveResult"></div>
+        </div>
+
     </div>
 
     <p class="note">All dimensions are in inches.</p>
 </div>
 
 <script>
+    const INPUT_FIELD_IDS = ['openingWidth', 'drawerHeight', 'slideLength', 'bottomThickness'];
+
+    function loadInputsFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        let hasAnyParam = false;
+
+        INPUT_FIELD_IDS.forEach((id) => {
+            const value = params.get(id);
+            if (value !== null) {
+                document.getElementById(id).value = value;
+                hasAnyParam = true;
+            }
+        });
+
+        return hasAnyParam;
+    }
+
+    function saveInputsToUrl() {
+        const params = new URLSearchParams();
+
+        INPUT_FIELD_IDS.forEach((id) => {
+            const value = document.getElementById(id).value.trim();
+            if (value !== '') params.set(id, value);
+        });
+
+        const query = params.toString();
+        const newUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+    }
+
     class Fraction {
       constructor(whole, numerator, denominator) {
         this.whole = whole;
@@ -211,17 +313,30 @@
     function calculateDimensions() {
         // (1.65354 inches represents approx 42mm for slide clearance)
         const SIDE_OFFSET = 1.65354;
+        // Keep this much material at the bottom edge for undermount slide clearance.
+        const UNNOTCHED_BOTTOM = 0.5;
 
         // 1. Get Inputs
         const width = parseFloat(document.getElementById('openingWidth').value);
         const height = parseFloat(document.getElementById('drawerHeight').value);
         const slide = parseFloat(document.getElementById('slideLength').value);
+        const bottomThickness = parseFloat(document.getElementById('bottomThickness').value);
 
         // Validation
-        if (isNaN(width) || isNaN(height) || isNaN(slide)) {
+        if (isNaN(width) || isNaN(height) || isNaN(slide) || isNaN(bottomThickness)) {
             alert("Please enter valid numbers for all fields.");
             return;
         }
+        if (bottomThickness <= 0) {
+            alert("Bottom material thickness must be greater than 0.");
+            return;
+        }
+        if (height <= (UNNOTCHED_BOTTOM + bottomThickness)) {
+            alert("Drawer height is too small. To keep 1/2\" unnotched material at the bottom, drawer height must be greater than 1/2\" + bottom thickness.");
+            return;
+        }
+
+        saveInputsToUrl();
 
         // 2. Perform Calculations
         // Side Panels: Length = Slide Length, Height = Input Height
@@ -235,6 +350,8 @@
         // Bottom
         const bottomLength = slide - 0.5;
         const bottomWidth = width - SIDE_OFFSET + 0.5;
+        const grooveBottomFromBottom = UNNOTCHED_BOTTOM;
+        const grooveTopFromBottom = UNNOTCHED_BOTTOM + bottomThickness;
 
 
         // 3. Update DOM
@@ -247,10 +364,20 @@
         document.getElementById('bottomPanelResult').innerHTML =
             `Length: ${asFraction(bottomLength)} <br> Width: ${asFraction(bottomWidth)}`;
 
+        document.getElementById('grooveResult').innerHTML =
+            `Cut along all box side parts (2 sides + front + back).<br>` +
+            `Keep <strong>1/2"</strong> unnotched material at the bottom edge.<br>` +
+        `Groove depth: <strong>1/4"</strong>`;
+
 
         // Show the results area
         document.getElementById('resultsArea').style.display = 'block';
     }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const hasParams = loadInputsFromUrl();
+        if (hasParams) calculateDimensions();
+    });
 </script>
 
 </body>
